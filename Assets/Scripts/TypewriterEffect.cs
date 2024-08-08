@@ -12,8 +12,7 @@ public class TypewriterEffect : MonoBehaviour
     public GameObject textback;
     private void Start()
     {
-       
-        //TextAnimation();
+       // TextAnimation();
     }
 
     public void TextAnimation()
@@ -29,6 +28,7 @@ public class TypewriterEffect : MonoBehaviour
         tmpText.text = null;
     }
 
+
     public void StartWriting()
     {
         if (gameObject.CompareTag("QuestText"))
@@ -37,13 +37,52 @@ public class TypewriterEffect : MonoBehaviour
         }
         else if (gameObject.CompareTag("Win"))
         {
-            RandomAnswer(0);
+            RandomAnswer(0, "");
             StartCoroutine(TypeText2());
         }
         else if (gameObject.CompareTag("Loose"))
         {
-            RandomAnswer(1);
+            RandomAnswer(1, "");
             StartCoroutine(TypeText2());
+        }
+    }
+
+    public void StartWritingForTimeLose(string state)
+    {
+        switch (state)
+        {
+            case "NotAccepted":
+                RandomAnswer(5, name);
+                StartCoroutine(TypeText2());
+                break;
+            case "Accepted":
+                RandomAnswer(6, name);
+                StartCoroutine(TypeText2());
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    public void StartWritingForOpponent(string state, string name)
+    {
+        switch (state)
+        {
+            case "Win":
+                RandomAnswer(2, name);
+                StartCoroutine(TypeText2());
+                break;  
+            case "Lose":
+                RandomAnswer(3, name);
+                StartCoroutine(TypeText2());
+                break;  
+            case "LoseByTimeAcceptedOpponent":
+                RandomAnswer(4, name);
+                StartCoroutine(TypeText2());
+                break;  
+            default:
+                break;
         }
     }
 
@@ -66,68 +105,67 @@ public class TypewriterEffect : MonoBehaviour
             tmpText.text += letter;
             yield return new WaitForSeconds(typeSpeed);
         }
-        if(PlayerManager.instance.mode == PlayerMode.Multiplayer)
-        {
-            GameManager.instance.NextBtnClicked();
-        }
-        
     }
     void OnTypingComplete()
     {
-        if(PlayerManager.instance.mode == PlayerMode.Multiplayer)
-        {
-            GameManager.instance.multiplayerManager.OnQuestionComplete();
-            GameManager.instance.TimerPlay();
-        }
-        else
-        {
-            GameManager.instance.TimerPlay();
-        }
-        
-        
+        GameManager.instance.TimerPlay();
     }
 
-    public void RandomAnswer(int index)
+    public void RandomAnswer(int index, string name)
     {
-        if(index == 0)
+        if (index == 0)
         {
             int randomInt = Random.Range(0, 3);
             if (randomInt == 0)
             {
-                Debug.Log(randomInt);
-                fullText = "Congratulations!   You're as sharp as Julius Caesar's favorite sword!";
+                fullText = "Congratulations! You're as sharp as Julius Caesar's favorite sword!";
             }
             else if (randomInt == 1)
             {
-                Debug.Log(randomInt);
                 fullText = "Bingo! You've earned more laurels than a Roman general!";
             }
             else
             {
-                Debug.Log(randomInt);
                 fullText = "You're on fire! Even Nero would give you a thumbs up!";
             }
         }
-        else
+        else if (index == 1)
         {
             int randomInt = Random.Range(0, 3);
             if (randomInt == 0)
             {
-                Debug.Log(randomInt);
                 fullText = "Oops! Time to hit the history books again!";
             }
             else if (randomInt == 1)
             {
-                Debug.Log(randomInt);
                 fullText = "Not quite! Even Cleopatra wouldn't bet on that answer.";
             }
             else
             {
-                Debug.Log(randomInt);
-                fullText = "Close,          but no laurel wreath this time!";
+                fullText = "Close, but no laurel wreath this time!";
             }
         }
-        
+        else if (index == 2) 
+        {
+            fullText = name + " provided the correct answer and won";
+        }
+        else if (index == 3)
+        {
+            fullText = name + " provided the wrong answer and lose";
+        }
+        else if (index == 4)
+        {
+            fullText = name + " press the buzzer but didn't answer";
+        }
+        else if (index == 5)
+        {
+            fullText ="No one press the buzzer, question changed";
+        }
+        else if (index == 6)
+        {
+            fullText = "You didn't answer the question";
+        }
+
 
     }
 

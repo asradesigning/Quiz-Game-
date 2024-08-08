@@ -18,26 +18,25 @@ public enum PlayerLevels
 public enum PlayerMode
 {
     Offline,
-    Multiplayer
+    Multiplayer,
+    Team
 }
 
 public class PlayerManager : MonoBehaviour
 {
-
     public static PlayerManager instance;
-    [SerializeField] PlayerData playerdata;
+    PlayerData playerdata;
     public string levelName;
     [SerializeField] GameObject[] Medals;
     Slider levelSlider;
     public PlayerLevels state;
     public PlayerMode mode;
-    [SerializeField] CanvasGroup CatergoryPanel, OnlineCategories;
+    [SerializeField] CanvasGroup CatergoryPanel, OnlineCategories, ChooseMode;
 
     public int required_xp;
     public int Score = 0;
     public int rankOfPlayer = 0;
     public int playerBagde = 0;
-
     //Player Details
     [SerializeField] TextMeshProUGUI playerName;
     [SerializeField] Image playerAvatar;
@@ -54,22 +53,27 @@ public class PlayerManager : MonoBehaviour
         CatergoryPanel.gameObject.SetActive(false);
         DontDestroyOnLoad(this);
         Score = 0;
-        LoadPlayerData();
     }
 
-    public void LoadPlayerData()
+    public void LoadPlayerData(PlayerData pData)
     {
-        playerdata.credentials.playerName = playerName.text;
+        playerdata = pData;
+        playerName.text = playerdata.credentials.playerName;
+        playerAvatar.sprite = playerdata.credentials.playerAvatar;
+        playerBagde = playerdata.credentials.playerBadge;
+        Score = playerdata.credentials.playerScore;
+        rankOfPlayer = playerdata.credentials.playerRank;
+        /*playerdata.credentials.playerName = playerName.text;
         playerdata.credentials.playerAvatar = playerAvatar.sprite;
-        playerdata.credentials.playerBadge = playerBagde;
-        if (int.TryParse(playerScore.text, out Score))
+        playerdata.credentials.playerBadge = playerBagde;*/
+       /* if (int.TryParse(playerScore.text, out Score))
         {
             playerdata.credentials.playerScore = Score;
         }
         if (int.TryParse(playerRank.text, out rankOfPlayer))
         {
             playerdata.credentials.playerRank = rankOfPlayer;
-        }
+        }*/
       
         
     }
@@ -82,9 +86,27 @@ public class PlayerManager : MonoBehaviour
         
     }
 
+    public void OfflineMode()
+    {
+        mode = PlayerMode.Offline;
+        PhotonManager.instance.playerMode = mode;
+        ChooseCategory();
+    }
+
     public void MultiplayerMode()
     {
-       mode = PlayerMode.Multiplayer;
+        mode = PlayerMode.Multiplayer;
+        PhotonManager.instance.ConnectToPhoton();
+        PhotonManager.instance.playerMode = mode;
+        ChooseOnlineModes();
+    }
+
+    public void TeamMode()
+    {
+        mode = PlayerMode.Team;
+        PhotonManager.instance.ConnectToPhoton();
+        PhotonManager.instance.playerMode = mode;
+        ChooseOnlineModes();
     }
 
     public void LoadPlayerItems()
@@ -250,11 +272,20 @@ public class PlayerManager : MonoBehaviour
 
     void ActivateMedals()
     {
-        for(int i = 0; i < Medals.Length; i++)
+        if (Medals[0] != null)
         {
-            Medals[i].SetActive(false);
+            for (int i = 0; i < Medals.Length; i++)
+            {
+                Medals[i].SetActive(false);
+            }
+            Medals[playerBagde].SetActive(true);
         }
-        Medals[playerBagde].SetActive(true);
+    }
+
+    public void ModePanel()
+    {
+        ChooseMode.gameObject.SetActive(true);
+        LeanTween.alphaCanvas(ChooseMode, 1, 0.6f);
     }
 
     public void ChooseCategory()
@@ -265,7 +296,9 @@ public class PlayerManager : MonoBehaviour
 
     public void ChooseOnlineModes()
     {
-        OnlineCategories.gameObject.SetActive(true);
-        LeanTween.alphaCanvas(OnlineCategories, 1, 0.6f);
+       /* if(PhotonManager.instance.playerMode == PlayerMode.Multiplayer)
+        {
+            PhotonManager.instance.PlayRandomMultiplayer();
+        }*/
     }
 }

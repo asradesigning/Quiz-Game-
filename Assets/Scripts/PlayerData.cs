@@ -3,10 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[CreateAssetMenu(fileName ="PlayerData", menuName = "ScriptableObjects/PlayerData", order = 3)]
-public class PlayerData : ScriptableObject
+public class PlayerData : MonoBehaviour
 {
+    public static PlayerData instance;
     public Credentials credentials;
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else{
+            Destroy(instance.gameObject);
+            instance = this;
+        }
+    }
 }
 
 [System.Serializable]
