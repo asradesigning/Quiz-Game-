@@ -21,7 +21,7 @@ public class AnimationEvent : MonoBehaviour
 
     public void TimeOver()
     {
-       GameManager.instance.YouLoose();
+      // GameManager.instance.AnswerGiven("Lose", "");
     }
 
     public void PlayMusic()

@@ -1,86 +1,168 @@
+using ExitGames.Client.Photon;
+using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TimeController : MonoBehaviour
+public class PhotonEventCodes
+{
+    public const byte TimerUpdate = 1;
+}
+
+public class TimeController : MonoBehaviour, IOnEventCallback
 {
     public Sprite[] timerSprites; // Array of sprites for each second
     public float timePerSprite = 1f; // Time duration per sprite
     private Image timerImage;
-    private float timer;
+    [SerializeField] private float timer;
+    [SerializeField] float buzzerTimer = 5f;
+    [SerializeField] float playTimer = 10f;
     private int currentSpriteIndex = 0;
-    private bool isPaused = false;
-    private bool isTimerRunning = true;
+    public bool isBuzzerTimerRunning = true;
+    public bool isPlayTimerRunning = false;
+    bool canPlay = false;
 
     void Start()
     {
-        timerImage = GetComponent<Image>(); // Assuming this script is attached to an Image component
+        timerImage = GetComponent<Image>();
+        InitializeTimer();
+        CheckCanPlay();
+        PhotonNetwork.AddCallbackTarget(this);
+    }
 
-        // Initialize timer
+    void OnDestroy()
+    {
+        PhotonNetwork.RemoveCallbackTarget(this);
+    }
+
+    void Update()
+    {
+        if (canPlay)
+        {
+            if (isBuzzerTimerRunning)
+            {
+                if (buzzerTimer > 0)
+                {
+                    buzzerTimer -= Time.deltaTime;
+                    currentSpriteIndex += (int)Time.deltaTime;
+                    timer = buzzerTimer;
+                    timerImage.sprite = timerSprites[currentSpriteIndex];
+                    SoundManager.instance.TickSound();
+                    if (PhotonNetwork.IsConnected)
+                    {
+                        object[] content = new object[] { buzzerTimer, currentSpriteIndex, "Buzzer"};
+                        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+                        PhotonNetwork.RaiseEvent(PhotonEventCodes.TimerUpdate, content, raiseEventOptions, SendOptions.SendReliable);
+                    }
+                }
+                else
+                {
+                    currentSpriteIndex = 0;
+                    LevelManager.instance.LoseByTime("LoseByTimeNotAccepted");
+                }
+            }
+
+            if (isPlayTimerRunning)
+            {
+                if (playTimer > 0)
+                {
+                    playTimer -= Time.deltaTime;
+                    currentSpriteIndex += (int)Time.deltaTime;
+                    timerImage.sprite = timerSprites[currentSpriteIndex];            
+                    SoundManager.instance.TickSound();
+                    timer = playTimer;
+                    timerImage.sprite = timerSprites[currentSpriteIndex];
+                    SoundManager.instance.TickSound();
+                    if (PhotonNetwork.IsConnected)
+                    {
+                        object[] content = new object[] { buzzerTimer, currentSpriteIndex, "Play" };
+                        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+                        PhotonNetwork.RaiseEvent(PhotonEventCodes.TimerUpdate, content, raiseEventOptions, SendOptions.SendReliable);
+                    }
+                }
+                else
+                {
+                    currentSpriteIndex = 0;
+                    LevelManager.instance.LoseByTime("LoseByTimeAccepted");
+                }
+            }
+        }
+    }
+
+
+    void InitializeTimer()
+    {
+        buzzerTimer = 5f;
+        playTimer = 10f;
         timer = 0f;
         currentSpriteIndex = 0;
         timerImage.sprite = timerSprites[currentSpriteIndex];
     }
 
-    void Update()
+    void CheckCanPlay()
     {
-        if (!isTimerRunning)
-            return;
+        canPlay = !PhotonNetwork.IsConnected || PhotonNetwork.IsMasterClient;
+    }
 
-        // Increment timer only if not paused
-        if (!isPaused)
+    public void OnEvent(EventData photonEvent)
+    {
+        if (!PhotonNetwork.IsMasterClient)
         {
-            timer += Time.deltaTime;
-
-            // Check if it's time to change sprite
-            if (timer >= timePerSprite)
+            if (photonEvent.Code == PhotonEventCodes.TimerUpdate)
             {
-                // Reset timer
-                timer -= timePerSprite;
+                object[] data = (object[])photonEvent.CustomData;
+                string timerType = data[2].ToString();
 
-                // Increment current sprite index
-                currentSpriteIndex++;
-
-                // If we've reached the end of the array, reset to the beginning
-                if (currentSpriteIndex >= timerSprites.Length)
+                if (timerType == "Buzzer")
                 {
-                    currentSpriteIndex = 0;
-                    GameManager.instance.YouLoose();
+                    buzzerTimer = (float)data[0];
+                    isBuzzerTimerRunning = true;
+                }
+                else if (timerType == "Play")
+                {
+                    playTimer = (float)data[0];
+                    isPlayTimerRunning = true;
                 }
 
-                // Change sprite
+                currentSpriteIndex = (int)data[1];
                 timerImage.sprite = timerSprites[currentSpriteIndex];
-                SoundManager.instance.TickSound();
             }
         }
     }
 
-    public void PauseTimer()
+    public float GetCurrentTime()
     {
-        isPaused = true;
+        return timer;
     }
 
-    public void ResumeTimer()
+    public void StartTimer(string type)
     {
-        isPaused = false;
+        if (type == "Buzzer")
+        {
+            isBuzzerTimerRunning = true;
+        }
+        else if (type == "Play")
+        {
+            isPlayTimerRunning = true;
+        }
     }
 
-    public void StartTimer()
+    public void StopTimer(string type)
     {
-        isTimerRunning = true;
+        if (type == "Buzzer")
+        {
+            isBuzzerTimerRunning = false;
+        }
+        else if (type == "Play")
+        {
+            isPlayTimerRunning = false;
+        }
     }
 
-    public void StopTimer()
+    public void ResetTimer(string type)
     {
-        isTimerRunning = false;
-    }
-
-    public void ResetTimer()
-    {
-        isTimerRunning = false;
-        timer = 0;
-        currentSpriteIndex = 0;
-        timerImage.sprite = timerSprites[currentSpriteIndex];
+        StopTimer(type);
+        InitializeTimer();
     }
 }

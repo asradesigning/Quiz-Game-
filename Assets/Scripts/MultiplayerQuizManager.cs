@@ -55,7 +55,6 @@ public class MultiplayerQuizManager : MonoBehaviour
 
     public void StartGame()
     {
-       
         LoadQuestion();
         OpenQuestPanel();
         CorrectBtn();
@@ -92,7 +91,7 @@ public class MultiplayerQuizManager : MonoBehaviour
         LeanTween.alphaCanvas(contentPanel.GetComponent<CanvasGroup>(), 1, 0.5f);
         for (int i = 0; i < levelTxt.Length; i++)
         {
-            levelTxt[i].GetComponent<TypewriterEffect>().TextAnimation();
+       //     levelTxt[i].GetComponent<TypewriterEffect>().TextAnimation();
         }
     }
 
@@ -177,11 +176,11 @@ public class MultiplayerQuizManager : MonoBehaviour
             {
 
             }
-            GameManager.instance.YouWIn();
+           // GameManager.instance.YouWIn();
         }
         else
         {
-            GameManager.instance.YouLoose();
+          //  GameManager.instance.YouLoose();
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,19 +20,14 @@ public class CorrectButton : MonoBehaviour
 
     public void BtnCLicked()
     {
-        if(PlayerManager.instance.mode == PlayerMode.Multiplayer)
+        //Debug.Log("Selected Answer :" + CorrectIndex);
+        LevelManager.instance.Answer(CorrectIndex);
+       /* if (PlayerManager.instance.mode == PlayerMode.Multiplayer)
         {
-            MultiplayerQuizManager.instance.QuizAnswer(CorrectIndex);
         }
         else
         {
             LevelManager.instance.Answer(CorrectIndex);
-        }
-            
-        
-        
-            
-        
-        
+        }   */
     }
 }

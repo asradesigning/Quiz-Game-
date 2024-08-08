@@ -1978,6 +1978,7 @@ MonoBehaviour:
   medalAnim: {fileID: 1698410033}
   medal_Mainparent: {fileID: 761161512}
   medalFakeparent: {fileID: 42161841}
+  player: {fileID: 0}
   multiplayerManager: {fileID: 1753266850}
   level_Slider: {fileID: 761161514}
   score_TXT: {fileID: 1417933121}
@@ -1986,6 +1987,7 @@ MonoBehaviour:
   reward1: {fileID: 742386806}
   reward2: {fileID: 928992765}
   medalIndex: 0
+  timer: 0
 --- !u!1 &314860016
 GameObject:
   m_ObjectHideFlags: 0
@@ -13820,6 +13822,11 @@ MonoBehaviour:
   - {fileID: -1564539971, guid: a13a61c735ffb8a45841d50ae51c011f, type: 3}
   - {fileID: -704513691, guid: a13a61c735ffb8a45841d50ae51c011f, type: 3}
   timePerSprite: 1
+  timer: 0
+  buzzerTimer: 5
+  playTimer: 10
+  isBuzzerTimerRunning: 1
+  isPlayTimerRunning: 0
 --- !u!114 &805001832
 MonoBehaviour:
   m_ObjectHideFlags: 0

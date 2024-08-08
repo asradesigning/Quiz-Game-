@@ -7,14 +7,12 @@ public class ButtonHoverHandler : MonoBehaviour, IPointerEnterHandler, IPointerE
 {
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Debug.Log("Button is hovered!");
         PlayHoverAnim();
     }
 
     // Method to be called when the pointer exits the button
     public void OnPointerExit(PointerEventData eventData)
     {
-        Debug.Log("Button hover exited!");
         ExitHoverAnim();
         // You can also call another method here if needed
     }
