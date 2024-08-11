@@ -2,6 +2,7 @@ using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,12 +13,11 @@ public class PhotonEventCodes
 
 public class TimeController : MonoBehaviour, IOnEventCallback
 {
-    public Sprite[] timerSprites; // Array of sprites for each second
-    public float timePerSprite = 1f; // Time duration per sprite
-    private Image timerImage;
+    TextMeshProUGUI timerText;
     [SerializeField] private float timer;
     [SerializeField] float buzzerTimer = 5f;
     [SerializeField] float playTimer = 10f;
+    [SerializeField] Image userImage;
     private int currentSpriteIndex = 0;
     public bool isBuzzerTimerRunning = true;
     public bool isPlayTimerRunning = false;
@@ -25,7 +25,7 @@ public class TimeController : MonoBehaviour, IOnEventCallback
 
     void Start()
     {
-        timerImage = GetComponent<Image>();
+        timerText = GetComponent<TextMeshProUGUI>();
         InitializeTimer();
         CheckCanPlay();
         PhotonNetwork.AddCallbackTarget(this);
@@ -47,7 +47,6 @@ public class TimeController : MonoBehaviour, IOnEventCallback
                     buzzerTimer -= Time.deltaTime;
                     currentSpriteIndex += (int)Time.deltaTime;
                     timer = buzzerTimer;
-                    timerImage.sprite = timerSprites[currentSpriteIndex];
                     SoundManager.instance.TickSound();
                     if (PhotonNetwork.IsConnected)
                     {
@@ -68,11 +67,11 @@ public class TimeController : MonoBehaviour, IOnEventCallback
                 if (playTimer > 0)
                 {
                     playTimer -= Time.deltaTime;
+                    userImage.fillAmount -= playTimer / 10; 
                     currentSpriteIndex += (int)Time.deltaTime;
-                    timerImage.sprite = timerSprites[currentSpriteIndex];            
                     SoundManager.instance.TickSound();
                     timer = playTimer;
-                    timerImage.sprite = timerSprites[currentSpriteIndex];
+                    timerText.text = Mathf.CeilToInt(playTimer).ToString();
                     SoundManager.instance.TickSound();
                     if (PhotonNetwork.IsConnected)
                     {
@@ -97,7 +96,7 @@ public class TimeController : MonoBehaviour, IOnEventCallback
         playTimer = 10f;
         timer = 0f;
         currentSpriteIndex = 0;
-        timerImage.sprite = timerSprites[currentSpriteIndex];
+        timerText.text = Mathf.CeilToInt(buzzerTimer).ToString();
     }
 
     void CheckCanPlay()
@@ -126,7 +125,7 @@ public class TimeController : MonoBehaviour, IOnEventCallback
                 }
 
                 currentSpriteIndex = (int)data[1];
-                timerImage.sprite = timerSprites[currentSpriteIndex];
+                timerText.text = Mathf.CeilToInt((float)data[0]).ToString();
             }
         }
     }

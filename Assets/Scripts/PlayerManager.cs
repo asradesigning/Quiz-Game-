@@ -31,8 +31,8 @@ public class PlayerManager : MonoBehaviour
     Slider levelSlider;
     public PlayerLevels state;
     public PlayerMode mode;
-    [SerializeField] CanvasGroup CatergoryPanel, OnlineCategories, ChooseMode;
-
+    [SerializeField] CanvasGroup CatergoryPanel, ChooseMode;
+    [SerializeField] Panel_Manager uiPanels;
     public int required_xp;
     public int Score = 0;
     public int rankOfPlayer = 0;
@@ -90,7 +90,7 @@ public class PlayerManager : MonoBehaviour
     {
         mode = PlayerMode.Offline;
         PhotonManager.instance.playerMode = mode;
-        ChooseCategory();
+        ChooseCategory(true);
     }
 
     public void MultiplayerMode()
@@ -282,16 +282,43 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public void ModePanel()
+    public void ModePanel(bool isActive)
     {
-        ChooseMode.gameObject.SetActive(true);
-        LeanTween.alphaCanvas(ChooseMode, 1, 0.6f);
+        if (isActive)
+        {
+            ChooseMode.gameObject.SetActive(true);
+            LeanTween.alphaCanvas(ChooseMode, 1, 0.6f);
+            MainMenuOpenClose(false);
+        }
+        else
+        {
+            LeanTween.alphaCanvas(ChooseMode, 0, 0.6f);
+            LeanTween.delayedCall(0.6f, DelayClose);
+            MainMenuOpenClose(true);
+        }
     }
 
-    public void ChooseCategory()
+    public void ChooseCategory(bool isActive)
     {
-        CatergoryPanel.gameObject.SetActive(true);
-        LeanTween.alphaCanvas(CatergoryPanel, 1, 0.6f);
+        if (isActive)
+        {
+            CatergoryPanel.gameObject.SetActive(true);
+            LeanTween.alphaCanvas(CatergoryPanel, 1, 0.6f);
+            MainMenuOpenClose(false);
+        }
+        else
+        {
+            LeanTween.alphaCanvas(CatergoryPanel, 0, 0.6f);
+            LeanTween.delayedCall(0.6f, DelayClose);
+            MainMenuOpenClose(true);
+        }
+       
+    }
+
+    void DelayClose()
+    {
+        CatergoryPanel.gameObject.SetActive(false);
+        ChooseMode.gameObject.SetActive(false);
     }
 
     public void ChooseOnlineModes()
@@ -300,5 +327,94 @@ public class PlayerManager : MonoBehaviour
         {
             PhotonManager.instance.PlayRandomMultiplayer();
         }*/
+    }
+
+    #region UIPanelsActiveDeactive
+
+    public void MainMenuOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.mainPanel.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.mainPanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+       
+    }
+    public void LeaderBoardOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.leaderBoard.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.leaderBoard.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    public void UserProfileOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.userProfile.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.userProfile.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    public void SettingsOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.settingsPanel.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.settingsPanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+
+    public void SurePanelOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.surePanel.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.surePanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+
+    public void WaitingOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.waitingPanel.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.waitingPanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    public void LoadingOpenClose(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.loadingPanel.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.loadingPanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    #endregion
+
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }
