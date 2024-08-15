@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -25,7 +26,6 @@ public class PlayerData : MonoBehaviour
 public class Credentials
 {
     public string playerName;
-    public Sprite playerAvatar;
     public int playerBadge;
     public int playerScore;
     public int playerRank;

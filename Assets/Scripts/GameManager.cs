@@ -12,16 +12,13 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-    [SerializeField] GameObject[] background_books;
-    [SerializeField] GameObject[] bookFlipbtns1, bookFlupBtns2;
     [SerializeField] Image[] medalImages;
     [SerializeField] GameObject loosePanel, WinPanel;
     [SerializeField] CanvasGroup content_main;
-    [SerializeField] GameObject book_main, bookParent, giveRewardPanel;
+    [SerializeField] GameObject giveRewardPanel;
     [SerializeField] TypewriterEffect text_01, text_02;
     [SerializeField] GameObject medalsObj, medalAnim;
     [SerializeField] GameObject medal_Mainparent, medalFakeparent, player;
-    int bookIndex = 0;
     public MultiplayerQuizManager multiplayerManager;
     public Slider level_Slider;
     public TextMeshProUGUI score_TXT;
@@ -39,8 +36,6 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
-  
-
     }
 
     // Start is called before the first frame update
@@ -50,20 +45,16 @@ public class GameManager : MonoBehaviour
         {
             var photonPlayer = PhotonNetwork.Instantiate(player.name, transform.position, transform.rotation);
             LevelManager.instance.player = photonPlayer.GetComponent<PhotonView>();
+            LevelManager.instance.player.RPC("SendAdOpponent", RpcTarget.OthersBuffered, PhotonNetwork.LocalPlayer.ActorNumber, PlayFabManager.instance.GetPlayerName());
         }
-
+/*
         if (PlayerManager.instance != null && PlayerManager.instance.state == PlayerLevels.Beginner)
         {
             MedalChange(0);
-            background_books[0].SetActive(true);
-            bookFlipbtns1[0].SetActive(true);
-            bookFlupBtns2[0].SetActive(true);
-        }
+        }*/
             
         
-        book_main.SetActive(false);
         giveRewardPanel.SetActive(false);
-        book_main.transform.localScale = new Vector3(0, 0, 0);
         if (PlayerManager.instance != null)
         {
             PlayerManager.instance.LoadPlayerItems();
@@ -72,10 +63,17 @@ public class GameManager : MonoBehaviour
         
     }
 
-    // Update is called once per frame
-    void Update()
+
+    public void SkipAnswer()
     {
-        timer = timerScript.GetCurrentTime();
+        TimerStop();
+        timerScript.ResetForOffline();
+        LeanTween.alphaCanvas(content_main, 0, 0.6f);
+        text_01.ResetText();
+        text_02.ResetText();
+        nextDelayCalled = false;
+        nextClicked = false;
+        NextBtnClicked();
     }
 
   
@@ -83,16 +81,15 @@ public class GameManager : MonoBehaviour
     public void AnswerGiven(string state, string name)
     {
         TimerStop();
-        timerScript.StopTimer("Play");
+        if (PhotonNetwork.IsConnected)
+            timerScript.ResetTime();
+        else
+            timerScript.ResetForOffline();
         LeanTween.alphaCanvas(content_main, 0, 0.6f);
         text_01.ResetText();
         text_02.ResetText();
         OpponentName = name;
         content_main.transform.GetChild(0).gameObject.SetActive(false);
-        book_main.SetActive(true);
-        LeanTween.scale(book_main, bookScale, 0.5f);
-        book_main.GetComponent<Animator>().Play("anim_01");
-        OpenBook(bookIndex);
         nextDelayCalled = false;
         nextClicked = false;
         switch (state)
@@ -126,38 +123,54 @@ public class GameManager : MonoBehaviour
     void WritingDelay1()
     {
         WinPanel.SetActive(true);
-        WinPanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWriting();
+        WinPanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+        WinPanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(true);
+        WinPanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(true);
+        LeanTween.alphaCanvas(WinPanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        WinPanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWriting();
         Invoke("NextBtnClicked", 3f);
     }
 
     void WritingDelay2()
     {
         loosePanel.SetActive(true);
-        loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWriting();
+        loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+        loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(true);
+        loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(true);
+        LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWriting();
         Invoke("NextBtnClicked", 3f);
     }
     void WritingDelay3()
     {
         WinPanel.SetActive(true);
-        bookFlipbtns1[1].gameObject.SetActive(false);
-        bookFlupBtns2[1].gameObject.SetActive(false);
-        WinPanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForOpponent("Win", OpponentName);
+        WinPanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+        WinPanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(false);
+        WinPanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(false);
+        LeanTween.alphaCanvas(WinPanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        WinPanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForOpponent("Win", OpponentName);
         OpponentName = null;
     }
 
     void WritingDelay4()
     {
         loosePanel.SetActive(true);
-        bookFlipbtns1[1].gameObject.SetActive(false);
-        bookFlupBtns2[1].gameObject.SetActive(false);
-        loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForOpponent("Lose", OpponentName);
+        loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+        loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(false);
+        loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(false);
+        LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForOpponent("Lose", OpponentName);
         OpponentName = null;
     }
 
     void WritingDelay5()
     {
         loosePanel.SetActive(true);
-        loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForTimeLose("Accepted");
+        loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+        loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(true);
+        loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(true);
+        LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForTimeLose("Accepted");
         Invoke("NextBtnClicked", 3f);
     }
 
@@ -167,15 +180,21 @@ public class GameManager : MonoBehaviour
         if (PhotonNetwork.IsMasterClient)
         {
             loosePanel.SetActive(true);
-            loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForTimeLose("NotAccepted");
+            loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+            loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(false);
+            loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(false);
+            LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+            loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForTimeLose("NotAccepted");
             Invoke("NextBtnClicked", 3f);
         }
         else
         {
             loosePanel.SetActive(true);
-            bookFlipbtns1[1].gameObject.SetActive(false);
-            bookFlupBtns2[1].gameObject.SetActive(false);
-            loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForTimeLose("NotAccepted");
+            loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+            loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(false);
+            loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(false);
+            LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+            loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForTimeLose("NotAccepted");
             OpponentName = null;
         }
     }
@@ -183,9 +202,11 @@ public class GameManager : MonoBehaviour
     void WritingDelay7()
     {
         loosePanel.SetActive(true);
-        bookFlipbtns1[1].gameObject.SetActive(false);
-        bookFlupBtns2[1].gameObject.SetActive(false);
-        loosePanel.transform.GetChild(0).GetComponent<TypewriterEffect>().StartWritingForOpponent("LoseByTimeAcceptedOpponent", OpponentName);
+        loosePanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+        loosePanel.transform.GetChild(1).GetChild(2).gameObject.SetActive(false);
+        loosePanel.transform.GetChild(1).GetChild(3).gameObject.SetActive(false);
+        LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 1, 0.6f);
+        loosePanel.transform.GetChild(1).GetChild(1).GetComponent<TypewriterEffect>().StartWritingForOpponent("LoseByTimeAcceptedOpponent", OpponentName);
         OpponentName = null;
     }
 
@@ -199,7 +220,6 @@ public class GameManager : MonoBehaviour
             {
                 WinPanel.SetActive(false);
                 loosePanel.SetActive(false);
-                book_main.SetActive(false);
                 LeanTween.delayedCall(1.5f, NextLevelDelay);
             }
             else
@@ -213,7 +233,6 @@ public class GameManager : MonoBehaviour
     {
         WinPanel.SetActive(false);
         loosePanel.SetActive(false);
-        book_main.SetActive(false);
         LeanTween.delayedCall(1.5f, NextLevelDelay);
     }
 
@@ -249,7 +268,6 @@ public class GameManager : MonoBehaviour
         {
 
             LoadNextLevel();
-            Debug.LogWarning("Calling Load With RPC");
         }
         else
         {
@@ -261,29 +279,26 @@ public class GameManager : MonoBehaviour
     public void LoadNextLevel()
     {
         Vector3 scale = new Vector3(0, 0, 0);
-        book_main.SetActive(false);
-        LeanTween.scale(book_main, scale, 0.5f);
         LevelManager.instance.StartGame();
-        /*if(PlayerManager.instance.mode == PlayerMode.Offline)
-        {
-        }
-        else
-        {
-           multiplayerManager.StartGame();
-        }*/
+        LeanTween.alphaCanvas(WinPanel.GetComponent<CanvasGroup>(), 0, 0.6f);
+        LeanTween.alphaCanvas(loosePanel.GetComponent<CanvasGroup>(), 0, 0.6f);
     }
 
     public void TimerPlay()
     {
+        if(PhotonNetwork.IsConnected)
         LevelManager.instance.buzzer.gameObject.SetActive(true);
        // Animator timerAnimator = content_main.transform.GetChild(0).GetChild(0).gameObject.GetComponent<Animator>();
         content_main.transform.GetChild(0).gameObject.SetActive(true);
-        timerScript.StartTimer("Buzzer");
+        if (PhotonNetwork.IsConnected)
+            timerScript.StartGame();
+        else
+            timerScript.DirectPlay();
     }
     public void TimerStop()
     {
         LevelManager.instance.buzzer.gameObject.SetActive(false);
-        timerScript.ResetTimer("Buzzer");
+        //timerScript.ResetTimer("Buzzer");
         content_main.transform.GetChild(0).gameObject.SetActive(false);
     }
 
@@ -307,7 +322,7 @@ public class GameManager : MonoBehaviour
 
     public void Pause()
     {
-        if (timerScript.isBuzzerTimerRunning)
+     /*   if (timerScript.isBuzzerTimerRunning)
         {
             timerScript.StopTimer("Buzzer");
         }
@@ -315,19 +330,19 @@ public class GameManager : MonoBehaviour
         {
             timerScript.StopTimer("Play");
         }
-        
+        */
     }
 
     public void ContinueGame()
     {
-        if (timerScript.isBuzzerTimerRunning)
+      /*  if (timerScript.isBuzzerTimerRunning)
         {
             timerScript.StartTimer("Buzzer");
         }
         else if (timerScript.isPlayTimerRunning)
         {
             timerScript.StartTimer("Play");
-        }
+        }*/
     }
 
     public void StateChanged()
@@ -366,7 +381,7 @@ public class GameManager : MonoBehaviour
         
     }
 
-    public void PlayReward(int index)
+   /* public void PlayReward(int index)
     {
         if(index == 0)
         {
@@ -376,9 +391,9 @@ public class GameManager : MonoBehaviour
         {
             reward2.Play();
         }
-    }
+    }*/
 
-    public void CloseRewards()
+  /*  public void CloseRewards()
     {
         LeanTween.alphaCanvas(giveRewardPanel.GetComponent<CanvasGroup>(), 0, 0.6f);
         LeanTween.delayedCall(0.7f, CloseDelay);
@@ -392,14 +407,14 @@ public class GameManager : MonoBehaviour
         TimerPlay();
         LoadNextLevel();
         Debug.LogWarning("Calling Load With CloseDelay()");
-    }
+    }*/
 
-    public void ChangeFakeMedal()
+ /*   public void ChangeFakeMedal()
     {
         MedalChange(medalIndex);
-    }
+    }*/
 
-    void MedalChange(int index)
+ /*   void MedalChange(int index)
     {
         for(int i = 0; i< medalImages.Length; i++)
         {
@@ -408,9 +423,9 @@ public class GameManager : MonoBehaviour
         }
         medalImages[index].enabled = true;
        
-    }
+    }*/
 
-    public void ChangeBigImage()
+/*    public void ChangeBigImage()
     {
         for (int i = 0; i < medalImages.Length; i++)
         {
@@ -418,19 +433,5 @@ public class GameManager : MonoBehaviour
           
         }
         medalAnim.transform.GetChild(medalIndex - 1).GetComponent<Image>().enabled = true;
-    }
-
-    public void OpenBook(int index)
-    {
-        bookIndex = index;
-        for (int i = 0; i < background_books.Length; i++)
-        {
-            background_books[i].SetActive(false);
-            bookFlipbtns1[i].SetActive(false);
-            bookFlupBtns2[i].SetActive(false);
-        }
-        bookFlipbtns1[index].SetActive(true);
-        bookFlupBtns2[index].SetActive(true);
-        background_books[index].SetActive(true);
-    }
+    }*/
 }

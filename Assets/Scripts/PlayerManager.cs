@@ -31,27 +31,47 @@ public class PlayerManager : MonoBehaviour
     Slider levelSlider;
     public PlayerLevels state;
     public PlayerMode mode;
-    [SerializeField] CanvasGroup CatergoryPanel, ChooseMode;
+    [SerializeField] CanvasGroup CatergoryPanel, ChooseMode, multiplayerWaiting;
     [SerializeField] Panel_Manager uiPanels;
     public int required_xp;
     public int Score = 0;
     public int rankOfPlayer = 0;
     public int playerBagde = 0;
     //Player Details
+    [Header("Default User Panel")]
     [SerializeField] TextMeshProUGUI playerName;
     [SerializeField] Image playerAvatar;
     [SerializeField] TextMeshProUGUI playerScore;
     [SerializeField] TextMeshProUGUI playerRank;
+    [SerializeField] Image[] PlayerBadges;
+    [Header("User Panel")]
+    [SerializeField] TextMeshProUGUI playerNamePanel;
+    [SerializeField] Image playerAvatarPanel;
+    [SerializeField] TextMeshProUGUI playerScorePanel;
+    [SerializeField] TextMeshProUGUI playerRankPanel;
+    [SerializeField] Image[] PlayerBadgesPanel;
+    [SerializeField] Slider LoadingSlider;
+
     // Start is called before the first frame update
     private void Awake()
     {
-        instance = this;
+        DontDestroyOnLoad(gameObject);
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(instance.gameObject);
+            instance = this;
+        }
+        
     }
 
     void Start()
     {
+        PlayFabManager.instance.SetPlayerManager(this);
         CatergoryPanel.gameObject.SetActive(false);
-        DontDestroyOnLoad(this);
         Score = 0;
     }
 
@@ -59,23 +79,20 @@ public class PlayerManager : MonoBehaviour
     {
         playerdata = pData;
         playerName.text = playerdata.credentials.playerName;
-        playerAvatar.sprite = playerdata.credentials.playerAvatar;
+        //playerAvatar.sprite = null;
         playerBagde = playerdata.credentials.playerBadge;
         Score = playerdata.credentials.playerScore;
         rankOfPlayer = playerdata.credentials.playerRank;
-        /*playerdata.credentials.playerName = playerName.text;
-        playerdata.credentials.playerAvatar = playerAvatar.sprite;
-        playerdata.credentials.playerBadge = playerBagde;*/
-       /* if (int.TryParse(playerScore.text, out Score))
+        if(playerBagde != 0)
         {
-            playerdata.credentials.playerScore = Score;
+            for(int i = 0; i < PlayerBadges.Length; i++)
+                PlayerBadges[i].gameObject.SetActive(i == playerBagde);
         }
-        if (int.TryParse(playerRank.text, out rankOfPlayer))
+        else
         {
-            playerdata.credentials.playerRank = rankOfPlayer;
-        }*/
-      
-        
+            for (int i = 0; i < PlayerBadges.Length; i++)
+                PlayerBadges[i].gameObject.SetActive(i == 0);
+        }
     }
 
 
@@ -95,10 +112,12 @@ public class PlayerManager : MonoBehaviour
 
     public void MultiplayerMode()
     {
+        multiplayerWaiting.gameObject.SetActive(true);
+        LeanTween.alphaCanvas(multiplayerWaiting, 1, 0.6f);
         mode = PlayerMode.Multiplayer;
         PhotonManager.instance.ConnectToPhoton();
         PhotonManager.instance.playerMode = mode;
-        ChooseOnlineModes();
+        //ChooseOnlineModes();
     }
 
     public void TeamMode()
@@ -113,7 +132,7 @@ public class PlayerManager : MonoBehaviour
     {
         if (GameManager.instance != null)
         {
-            playerScore.text = GameManager.instance.score_TXT.text;
+            playerScore.text = GameManager.instance.score_TXT.text;  
             levelSlider = GameManager.instance.level_Slider;
             
 
@@ -130,10 +149,16 @@ public class PlayerManager : MonoBehaviour
         
     }
 
-    public void ChooseCategory(string category)
+    IEnumerator CategorySlider(string category)
     {
-        
-        
+        LoadingOpenClose(true);
+        LoadingSlider.maxValue = 10f;
+        for(int i = 0; i < 10000; i++)
+        {
+            LoadingSlider.value += 0.001f;
+            yield return new WaitForSeconds(0.0006f);
+        }
+
         if (mode == PlayerMode.Offline)
         {
             if (category == "Ancient")
@@ -183,6 +208,11 @@ public class PlayerManager : MonoBehaviour
                 LoadPlayerItems();
             }
         }
+    }
+
+    public void ChooseCategory(string category)
+    {
+        StartCoroutine(CategorySlider(category));
     }
 
     public void IncreaseScore(int score)
@@ -359,6 +389,20 @@ public class PlayerManager : MonoBehaviour
         if (isActive)
         {
             uiPanels.userProfile.GetComponent<Toggle_Panels>().SetActiveState(true);
+            playerNamePanel.text = playerdata.credentials.playerName;
+            //playerAvatarPanel.sprite = null;
+            playerScorePanel.text = playerdata.credentials.playerScore.ToString();
+            playerRankPanel.text = playerdata.credentials.playerRank.ToString();
+            if (playerBagde != 0)
+            {
+                for (int i = 0; i < PlayerBadgesPanel.Length; i++)
+                    PlayerBadgesPanel[i].gameObject.SetActive(i == playerBagde);
+            }
+            else
+            {
+                for (int i = 0; i < PlayerBadgesPanel.Length; i++)
+                    PlayerBadgesPanel[i].gameObject.SetActive(i == 0);
+            }
         }
         else
         {

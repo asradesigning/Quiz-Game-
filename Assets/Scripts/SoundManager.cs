@@ -30,10 +30,10 @@ public class SoundManager : MonoBehaviour
 
     private void Start()
     {
-        if (gameSound != null)
+        if (bgmSlider != null)
             bgmSlider.value = gameSound.volume;
 
-        if (Click != null)
+        if (sfxSlider != null)
             sfxSlider.value = Click.volume;
 
         bgmSlider.onValueChanged.AddListener(SetBGMVolume);

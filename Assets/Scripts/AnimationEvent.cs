@@ -41,22 +41,22 @@ public class AnimationEvent : MonoBehaviour
     public void PlayerMask()
     {
         maskAnim.Play("Mask_Anim");
-        GameManager.instance.PlayReward(1);
+       // GameManager.instance.PlayReward(1);
     }
 
     public void RewardSound()
     {
-        GameManager.instance.ChangeBigImage();
-        GameManager.instance.PlayReward(0);
+        //GameManager.instance.ChangeBigImage();
+       // GameManager.instance.PlayReward(0);
     }
 
     public void Reward_CLose()
     {
-        GameManager.instance.CloseRewards();
+//GameManager.instance.CloseRewards();
     }
 
     public void FakeMedal()
     {
-        GameManager.instance.ChangeFakeMedal();
+       // GameManager.instance.ChangeFakeMedal();
     }
 }

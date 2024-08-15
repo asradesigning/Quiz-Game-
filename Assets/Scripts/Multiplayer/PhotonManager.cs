@@ -42,6 +42,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         Debug.Log("Successfully Joined Lobby");
+        PhotonNetwork.NickName = PlayFabManager.instance.GetPlayerName();
         if (playerMode == PlayerMode.Multiplayer)
         {
             PlayRandomMultiplayer();
@@ -69,9 +70,9 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     {
         string RoomName = "Room" + Random.Range(0, 1000);
         RoomOptions roomOptions = new RoomOptions();
-        roomOptions.MaxPlayers = 1;
+        roomOptions.MaxPlayers = 2;
         ExitGames.Client.Photon.Hashtable customRoomProperties = new ExitGames.Client.Photon.Hashtable();
-        customRoomProperties.Add("Question", 3);
+        customRoomProperties.Add("Question", 10);
         roomOptions.CustomRoomProperties = customRoomProperties;
         PhotonNetwork.CreateRoom(RoomName, roomOptions, TypedLobby.Default);
         Debug.Log("Joining Room");
@@ -82,6 +83,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         Debug.Log("Room Joined");
         Debug.Log("Current Players " + PhotonNetwork.CurrentRoom.PlayerCount);
         Debug.Log("Max Players " + PhotonNetwork.CurrentRoom.MaxPlayers);
+
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
            PhotonNetwork.LoadLevel(1);

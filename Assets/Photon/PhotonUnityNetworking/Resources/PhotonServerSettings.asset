@@ -50,6 +50,9 @@ MonoBehaviour:
   - RPC_OpenQuestPanel
   - RPC_CheckWin
   - RPC_Question
+  - StartCountdown
+  - HandleBuzzerPress
+  - SendAdOpponent
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
