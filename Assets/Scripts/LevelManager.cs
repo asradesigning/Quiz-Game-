@@ -22,13 +22,15 @@ public class LevelManager : MonoBehaviour
     [SerializeField] int correct = 0;
     public Button buzzer;
     private int questionIndex = 0;
-    private int player_Xp = 0;
     private List<int> shuffledIndices;
     public List<LevelData> levels = new List<LevelData>();
     public string levelName;
     bool canPlay = false;
     public PhotonView player;
     public int LoadQuestionCount = 0;
+    [SerializeField] GameObject User1, User2;
+    public Player Opponent;
+    int correctAnswers = 0;
     // Start is called before the first frame update
 
     private void Awake()
@@ -45,7 +47,7 @@ public class LevelManager : MonoBehaviour
             }
             else
             {
-                canPlay=false;
+                canPlay = false;
             }
         }
         else
@@ -62,23 +64,98 @@ public class LevelManager : MonoBehaviour
         }
         surePanel[0].SetActive(false);
         surePanel[1].SetActive(false);
+        CheckMode();
     }
+
+    void CheckMode()
+    {
+        if (PhotonManager.instance.playerMode == PlayerMode.Offline)
+        {
+            buzzer.gameObject.SetActive(false);
+            User1.SetActive(true);
+            User2.SetActive(false);
+            User1.GetComponent<User>().SetDetails(null, PlayFabManager.instance.GetPlayerBagde(), PlayFabManager.instance.GetPlayerName());
+            User1.GetComponent<RectTransform>().localPosition = Vector3.zero;
+        }
+        else
+        {
+            buzzer.gameObject.SetActive(true);
+            User1.SetActive(true);
+            User1.GetComponent<User>().SetDetails(null, PlayFabManager.instance.GetPlayerBagde(), PlayFabManager.instance.GetPlayerName());
+        }
+    }
+
+    public void SetupOpponent()
+    {
+        User2.SetActive(true);
+        User2.GetComponent<User>().SetDetails(null, Opponent.GetPlayerBadge(), Opponent.GetPlayerName());
+    }                                                                                                                                                                                                                                              
 
     public void PlayerTurnCall()
     {
-        player.GetComponent<Player>().TurnCall();
+        if (!GameManager.instance.timerScript.isPlayTimerRunning || GameManager.instance.timerScript.isBuzzerPressed) return;
+        player.RPC("HandleBuzzerPress", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+        //User1.GetComponent<User>().SetTurn();
+        //ResetTimers("mine");
+    }
+
+    public void UserTimer(float time, float totalTime)
+    {
+        float calculatedTime = time * ( 1 / totalTime);
+        User1.GetComponent<User>().Timer.fillAmount = calculatedTime;
+        User2.GetComponent<User>().Timer.fillAmount = calculatedTime;
+    }
+
+    public void PlayerTimer(float time, float totalTime)
+    {
+        float calculatedTime = time * (1 / totalTime);
+        User1.GetComponent<User>().Timer.fillAmount = calculatedTime;
+    }
+
+    public void OpponentTimer(float time, float totalTime)
+    {
+        float calculatedTime = time * (1 / totalTime);
+        User2.GetComponent<User>().Timer.fillAmount = calculatedTime;
+    }
+
+    public void SetTimerImage()
+    {
+        User1.GetComponent<User>().Timer.fillAmount = 1;
+        User2.GetComponent<User>().Timer.fillAmount = 1;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!player.GetComponent<Player>().opponentTurn && !player.GetComponent<Player>().turn)
+        if (PhotonNetwork.IsConnected)
         {
-            buzzer.interactable = true;
+            if (!GameManager.instance.timerScript.isBuzzerPressed && !player.GetComponent<Player>().turn)
+            {
+                buzzer.interactable = true;
+                User1.GetComponent<User>().Turn.SetActive(false);
+                User2.GetComponent<User>().Turn.SetActive(false);
+            }
+            else
+            {
+                buzzer.interactable = false;
+            }
+
+            if (player.GetComponent<Player>().turn)
+            {
+                User1.GetComponent<User>().Turn.SetActive(true);
+                User2.GetComponent<User>().Turn.SetActive(false);
+                User2.GetComponent<User>().Timer.fillAmount = 0;
+            }
+            else if (GameManager.instance.timerScript.isBuzzerPressed && !player.GetComponent<Player>().turn)
+            {
+                User2.GetComponent<User>().Turn.SetActive(true);
+                User1.GetComponent<User>().Turn.SetActive(false);
+                User1.GetComponent<User>().Timer.fillAmount = 0;
+            }
         }
         else
         {
-            buzzer.interactable = false;
+            buzzer.gameObject.SetActive(false);
         }
     }
 
@@ -92,6 +169,9 @@ public class LevelManager : MonoBehaviour
         //CorrectBtn();
         surePanel[0].SetActive(false);
         surePanel[1].SetActive(false);
+        User1.GetComponent<User>().Timer.fillAmount = 1;
+        if(PhotonNetwork.IsConnected)
+            User2.GetComponent<User>().Timer.fillAmount = 1;
     }
 
     public void SetLevels()
@@ -105,28 +185,23 @@ public class LevelManager : MonoBehaviour
             if (levelName == "Ancient")
             {
                 levels = FetchData.instance.Ancient_levels;
-                GameManager.instance.OpenBook(0);
             }
             else if (levelName == "Science")
             {
                 levels = FetchData.instance.Science_levels;
-                GameManager.instance.OpenBook(1);
             }
             else if (levelName == "Arts")
             {
                 levels = FetchData.instance.Arts_levels;
-                GameManager.instance.OpenBook(2);
             }
             else if (levelName == "Wars")
             {
                 levels = FetchData.instance.Wars_levels;
-                GameManager.instance.OpenBook(3);
             }
         }
         else
         {
             levels = FetchData.instance.AllQuestions;
-            GameManager.instance.OpenBook(1);
         }
        
     }
@@ -248,7 +323,21 @@ public class LevelManager : MonoBehaviour
         }
         QuestionsPanel.SetActive(false);
         GameOverPanel.SetActive(true);
-        Winner.text = winnerName;
+        if (winnerName == player.GetComponent<Player>().GetPlayerName()) 
+        {
+            GameOverPanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+            GameOverPanel.transform.GetChild(1).GetChild(1).gameObject.SetActive(false);
+            GameOverPanel.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = "+" + player.GetComponent<Player>().currentPoints + " POINTS";
+            GameOverPanel.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<TextMeshProUGUI>().text = "+" + player.GetComponent<Player>().currentPoints * 10 + "xp";
+        }
+        else
+        {
+            GameOverPanel.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+            GameOverPanel.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
+            GameOverPanel.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = "+0";
+            GameOverPanel.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<TextMeshProUGUI>().text = "+0";
+        }
+        Winner.text = winnerName + " IS THE WINNER";
         
     }
 
@@ -316,22 +405,21 @@ public class LevelManager : MonoBehaviour
     {
         if (index == correct)
         {
-            player_Xp = 100;
-            PlayerManager.instance.IncreaseScore(player_Xp);
             GameManager.instance.AnswerGiven("Win", "");
             if (PhotonNetwork.IsConnected)
             {
                 if (player.IsMine)
                 {
                     player.GetComponent<Player>().currentPoints++;
+                    User1.GetComponent<User>().UpdatePoints(player.GetComponent<Player>().currentPoints);
                     player.GetComponent<Player>().turn = false;
-                    player.GetComponent<Player>().opponentTurn = false;
-                    player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "Win", PlayFabManager.instance.GetPlayerName());
+                    player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "Win", PlayFabManager.instance.GetPlayerName(), player.GetComponent<Player>().currentPoints);
                 }
             }
             else
             {
-
+                correctAnswers++;
+                User1.GetComponent<User>().UpdatePoints(correctAnswers);
             }
         }
         else
@@ -342,39 +430,39 @@ public class LevelManager : MonoBehaviour
                 if (player.IsMine)
                 {
                     player.GetComponent<Player>().currentPoints--;
+                    User1.GetComponent<User>().UpdatePoints(player.GetComponent<Player>().currentPoints);
                     player.GetComponent<Player>().turn = false;
-                    player.GetComponent<Player>().opponentTurn = false;
-                    player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "Lose", PlayFabManager.instance.GetPlayerName());
+                    player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "Lose", PlayFabManager.instance.GetPlayerName(), player.GetComponent<Player>().currentPoints);
                 }
+            }
+            else
+            {
+                correctAnswers--;
+                User1.GetComponent<User>().UpdatePoints(correctAnswers);
             }
         }
     }
 
-    public void RPC_Answer(string state, string name)
+    public void RPC_Answer(string state, string name, int points)
     {
         switch (state)
         {
             case "Win":
                 GameManager.instance.AnswerGiven("OpponentWin", name);
+                User2.GetComponent<User>().UpdatePoints(points);
                 break;
             case "Lose":
                 GameManager.instance.AnswerGiven("OpponentLose", name);
+                User2.GetComponent<User>().UpdatePoints(points);
                 break;
-            case "LoseByTimeAccepted":
-                GameManager.instance.AnswerGiven("LoseByTimeAccepted", name);
-                break;
-            case "LoseByTimeNotAccepted":
-                GameManager.instance.AnswerGiven("LoseByTimeNotAccepted", name);
-                break;  
             case "LoseByTimeAcceptedOpponent":
                 GameManager.instance.AnswerGiven("LoseByTimeAcceptedOpponent", name);
+                User2.GetComponent<User>().UpdatePoints(points);
                 break;
             default:
                 break;
         }
         player.GetComponent<Player>().turn = false;
-        player.GetComponent<Player>().opponentTurn = false;
-
     }
 
     public void CheckPanel(int index)
@@ -433,39 +521,34 @@ public class LevelManager : MonoBehaviour
 
     public void LoseByTime(string state)
     {
-        if(state == "LoseByTimeAccepted")
+        if (PhotonNetwork.IsConnected)
         {
-            if (player.GetComponent<Player>().turn)
+            if (state == "LoseByTimeAccepted")
             {
-                player.GetComponent<Player>().currentPoints--;
-                GameManager.instance.AnswerGiven("LoseByTimeAccepted", "");
-                player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "LoseByTimeAcceptedOpponent", PlayFabManager.instance.GetPlayerName());
-            }
-            else if (player.GetComponent<Player>().opponentTurn)
-            {
-                Player[] players = FindObjectsOfType<Player>();
-                for (int i = 0; i < players.Length; i++) 
+                if (player.GetComponent<Player>().turn)
                 {
-                    if (!players[i].GetComponent<PhotonView>().IsMine)
-                    {
-                        players[i].currentPoints--;
-                        GameManager.instance.AnswerGiven("LoseByTimeAcceptedOpponent", players[i].GetPlayerName());
-                        break;
-                    }
+                    player.GetComponent<Player>().currentPoints--;
+                    GameManager.instance.AnswerGiven("LoseByTimeAccepted", "");
+                    player.RPC("RPC_Answer", RpcTarget.Others, "LoseByTimeAcceptedOpponent", PlayFabManager.instance.GetPlayerName(), player.GetComponent<Player>().currentPoints);
                 }
-                player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "LoseByTimeAccepted", "");
-                player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "LoseByTimeAccepted", "");
+            }
+            else if (state == "LoseByTimeNotAccepted")
+            {
+                GameManager.instance.AnswerGiven("LoseByTimeNotAccepted", "");
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    player.RPC("RPC_Question", RpcTarget.AllBuffered, "Increase");
+                }
+            }
+            player.GetComponent<Player>().turn = false;
+        }
+        else
+        {
+            if(state == "LoseByTimeOffline")
+            {
+                GameManager.instance.SkipAnswer();
             }
         }
-        else if(state == "LoseByTimeNotAccepted")
-        {
-            GameManager.instance.AnswerGiven("LoseByTimeNotAccepted", "");
-            player.RPC("RPC_Question", RpcTarget.AllBuffered, "Increase");
-            player.RPC("RPC_Answer", RpcTarget.OthersBuffered, "LoseByTimeNotAccepted", "");
-        }
-        player.GetComponent<Player>().turn = false;
-        player.GetComponent<Player>().opponentTurn = false;
-
     }
 
 }

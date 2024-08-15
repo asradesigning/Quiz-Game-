@@ -48,9 +48,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerData: {fileID: 0}
   turn: 0
-  opponentTurn: 0
   currentPoints: 0
-  Name: 
+  Name: Player621
+  Badge: 0
+  avatar: {fileID: 0}
 --- !u!114 &-7434547550300316423
 MonoBehaviour:
   m_ObjectHideFlags: 0

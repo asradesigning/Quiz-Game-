@@ -18,9 +18,9 @@ public class PhotonRPC : MonoBehaviour
     }
 
     [PunRPC]
-    void RPC_Answer(string state, string name)
+    void RPC_Answer(string state, string name, int points)
     {
-        LevelManager.instance.RPC_Answer(state, name);
+        LevelManager.instance.RPC_Answer(state, name, points);
     }
 
     [PunRPC]
@@ -54,16 +54,31 @@ public class PhotonRPC : MonoBehaviour
     }
 
     [PunRPC]
-    void RPC_TurnCall(int viewID)
+    void StartCountdown()
+    {
+        GameManager.instance.timerScript.RPC_StartCountdown();
+    }
+
+    [PunRPC]
+    void HandleBuzzerPress(int playerID)
+    {
+        GameManager.instance.timerScript.RPC_HandleBuzzerPress(playerID);
+    }
+
+    [PunRPC]
+    void SendAdOpponent(int actorNum, string name)
     {
         PhotonView[] players = FindObjectsOfType<PhotonView>();
-        if(players.Length > 0)
+        if (players.Length >= 0)
         {
             for (int i = 0; i < players.Length; i++)
             {
-                if (players[i].ViewID != viewID)
+                if (players[i].Owner.ActorNumber == actorNum)
                 {
-                    players[i].GetComponent<Player>().opponentTurn = true;
+                    LevelManager.instance.Opponent = players[i].GetComponent<Player>();
+                    LevelManager.instance.Opponent.Name = name;
+                    LevelManager.instance.SetupOpponent();
+                    break;
                 }
             }
         }

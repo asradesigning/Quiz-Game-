@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class FetchData : MonoBehaviour
 {
     public static FetchData instance;
-    public string apiUrl = "http://localhost/Quiz/fetch.php";
+    public string apiUrl = "https://quiz.asra-studios.com/fetch.php";
     public List<LevelData> Ancient_levels = new List<LevelData>();
     public List<LevelData> Science_levels = new List<LevelData>();
     public List<LevelData> Arts_levels = new List<LevelData>();
@@ -59,8 +59,6 @@ public class FetchData : MonoBehaviour
                         int levelNumber = int.Parse(columns[4].Trim());
                         int correctAnswer = int.Parse(columns[5].Trim());
                         string mode = columns[6].Trim();
-                        Debug.Log(mode);
-
                         Sprite image1 = null;
                         Sprite image2 = null;
 
@@ -126,7 +124,7 @@ public class FetchData : MonoBehaviour
 
     private IEnumerator LoadSprite(string imagePath, System.Action<Sprite> onLoaded)
     {
-        string url = "http://localhost/Quiz/" + imagePath.Trim(); // Construct the full URL
+        string url = "https://quiz.asra-studios.com/" + imagePath.Trim(); // Construct the full URL
         using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(url))
         {
             yield return www.SendWebRequest();

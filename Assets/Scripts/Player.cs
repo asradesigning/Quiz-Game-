@@ -8,15 +8,21 @@ public class Player : MonoBehaviour, IPunObservable
 {
     public PlayerData PlayerData;
     public bool turn = false;
-    public bool opponentTurn = false;
     PhotonView pv;
     public int currentPoints;
     public string Name;
+    public int Badge;
+    public Texture2D avatar;
 
     void Start()
     {
         pv = GetComponent<PhotonView>();
-        Name = PlayFabManager.instance.GetPlayerName();
+        if (pv.IsMine)
+        {
+            Name = PlayFabManager.instance.GetPlayerName();
+            Badge = PlayFabManager.instance.GetPlayerBagde();
+            //avatar = PlayFabManager.instance.GetPlayerAvatar().texture;
+        }
     }
 
     // Update is called once per frame
@@ -25,28 +31,22 @@ public class Player : MonoBehaviour, IPunObservable
 
     }
 
-    public void TurnCall()
-    {
-        if (!opponentTurn && pv.IsMine) {
-            turn = true;
-            pv.RPC("RPC_TurnCall", RpcTarget.OthersBuffered, pv.ViewID);
-            Debug.Log("Sending Turn!!!");
-            GameManager.instance.timerScript.StopTimer("Buzzer");
-            GameManager.instance.timerScript.ResetTimer("Buzzer");
-            GameManager.instance.timerScript.StartTimer("Play");
-        }
-    }
-
     void IPunObservable.OnPhotonSerializeView(Photon.Pun.PhotonStream stream, Photon.Pun.PhotonMessageInfo info)
     {
         if (stream.IsWriting)
         {
             stream.SendNext(currentPoints);
+            stream.SendNext(Name);
+            stream.SendNext(Badge); 
         }
 
         if (stream.IsReading) 
         {
             currentPoints = (int)stream.ReceiveNext();
+            Name = stream.ReceiveNext().ToString();
+            Badge = (int)stream.ReceiveNext();
+            string tex = (string)stream.ReceiveNext();
+            Debug.Log(avatar);
         }
     }
 
@@ -54,5 +54,9 @@ public class Player : MonoBehaviour, IPunObservable
     {
         return Name;
     }
-       
+
+    public int GetPlayerBadge()
+    {
+        return Badge;
+    } 
 }

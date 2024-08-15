@@ -13,6 +13,9 @@ public class PlayFabManager : MonoBehaviour
     [SerializeField] GameObject leaderboardScreen;
     [SerializeField] Transform leaderboardContent;
     [SerializeField] GameObject leaderboardItemPrefab;
+    [SerializeField] Texture2D defaultAvatar;
+    public Sprite PlayerAvatar;
+    public string playfabID;
 
     private void Awake()
     {
@@ -41,7 +44,11 @@ public class PlayFabManager : MonoBehaviour
         {
             GuestCreateAccount();
         }
-        playerManager = FindObjectOfType<PlayerManager>();
+    }
+
+    public void SetPlayerManager(PlayerManager manager)
+    {
+        playerManager = manager;
     }
 
     #region GuestLogin
@@ -66,7 +73,6 @@ public class PlayFabManager : MonoBehaviour
                   new Credentials
                   {
                       playerName = playerName,
-                      playerAvatar = null,
                       playerBadge = 0,
                       playerRank = 0,
                       playerScore = 0
@@ -95,6 +101,7 @@ public class PlayFabManager : MonoBehaviour
         {
             PlayerPrefs.SetInt("GuestLogin", 1);
             GetPlayerData();
+            playfabID = result.PlayFabId;
         }, OnError);
     }
 
@@ -185,6 +192,11 @@ public class PlayFabManager : MonoBehaviour
         }
     }
 
+    public int GetPlayerBagde()
+    {
+        return playerData.credentials.playerBadge;
+    }
+
     #endregion
     #region LeaderBoard
     public void SendLeaderBoard(int value)
@@ -237,6 +249,8 @@ public class PlayFabManager : MonoBehaviour
         }
     }
     #endregion
+
+
 
     void Update()
     {
