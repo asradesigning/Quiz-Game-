@@ -152,11 +152,11 @@ public class PlayerManager : MonoBehaviour
     IEnumerator CategorySlider(string category)
     {
         LoadingOpenClose(true);
-        LoadingSlider.maxValue = 10f;
-        for(int i = 0; i < 10000; i++)
+        LoadingSlider.maxValue = 5f;
+        for(int i = 0; i < 10; i++)
         {
-            LoadingSlider.value += 0.001f;
-            yield return new WaitForSeconds(0.0006f);
+            LoadingSlider.value += 1f;
+            yield return new WaitForSeconds(0.1f);
         }
 
         if (mode == PlayerMode.Offline)
@@ -453,6 +453,28 @@ public class PlayerManager : MonoBehaviour
         else
         {
             uiPanels.loadingPanel.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    public void TournamentMode(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.tournamentMode.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.tournamentMode.GetComponent<Toggle_Panels>().SetActiveState(false);
+        }
+    }
+    public void TournamentFormat(bool isActive)
+    {
+        if (isActive)
+        {
+            uiPanels.tournamentFormat.GetComponent<Toggle_Panels>().SetActiveState(true);
+        }
+        else
+        {
+            uiPanels.tournamentFormat.GetComponent<Toggle_Panels>().SetActiveState(false);
         }
     }
     #endregion
