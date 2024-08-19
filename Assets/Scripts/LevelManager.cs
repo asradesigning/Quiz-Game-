@@ -11,7 +11,6 @@ public class LevelManager : MonoBehaviour
 {
     public static LevelManager instance;
     [SerializeField] Image[] levelImg;
-    [SerializeField] GameObject[] sureBgImg;
     [SerializeField] GameObject[] surePanel;
     [SerializeField] GameObject contentPanel;
     [SerializeField] GameObject QuestionsPanel;
@@ -469,22 +468,22 @@ public class LevelManager : MonoBehaviour
     {
         if (index == 0)
         {
-            sureBgImg[1].SetActive(false);
+           
             if (!PhotonNetwork.IsConnected)
             {
-                sureBgImg[0].SetActive(true);
+               
                 surePanel[0].SetActive(true);
             }
             else
             {
                 if (player.GetComponent<Player>().turn)
                 {
-                    sureBgImg[0].SetActive(true);
+                   
                     surePanel[0].SetActive(true);
                 }
                 else
                 {
-                    sureBgImg[0].SetActive(false);
+                    
                     surePanel[0].SetActive(false);
                 }
             }
@@ -494,22 +493,22 @@ public class LevelManager : MonoBehaviour
         }
         else
         {
-            sureBgImg[0].SetActive(false);
+           
             if (!PhotonNetwork.IsConnected)
             {
-                sureBgImg[1].SetActive(true);
+                
                 surePanel[1].SetActive(true);
             }
             else
             {
                 if (player.GetComponent<Player>().turn)
                 {
-                    sureBgImg[1].SetActive(true);
+                    
                     surePanel[1].SetActive(true);
                 }
                 else
                 {
-                    sureBgImg[1].SetActive(false);
+                    
                     surePanel[1].SetActive(false);
                 }
             }
